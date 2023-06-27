@@ -1,8 +1,17 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"math/big"
+	"os"
 )
+
+type BigInts struct {
+	Values []*big.Int
+}
 
 func MdsMatrix() [][]*big.Int {
 	matrix := make([][]*big.Int, 3)
@@ -59,4 +68,43 @@ func MdsMatrix() [][]*big.Int {
 	}
 
 	return matrix
+}
+
+func (bi *BigInts) UnmarshalJSON(data []byte) error {
+	var values []json.Number
+	if err := json.Unmarshal(data, &values); err != nil {
+		return err
+	}
+
+	for _, value := range values {
+		bigIntValue, _ := new(big.Int).SetString(value.String(), 10)
+		bi.Values = append(bi.Values, bigIntValue)
+	}
+
+	return nil
+}
+
+func RoundConstants() []*big.Int {
+	jsonFile, err := os.Open("../constant.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var bigInts BigInts
+	err = json.Unmarshal(byteValue, &bigInts)
+	if err != nil {
+		log.Fatalf("json.Unmarshal error: %v", err)
+	}
+
+	return bigInts.Values
+}
+
+func main() {
+	constants := RoundConstants()
+	for i, constant := range constants {
+		fmt.Printf("Constant %d: %s\n", i, constant.String())
+	}
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math/big"
+
 	"github.com/consensys/gnark/frontend"
 )
 
@@ -22,5 +24,15 @@ func MatrixMul(api frontend.API, state [3]frontend.Variable) [3]frontend.Variabl
 	}
 
 	return out
+}
 
+// Constant Layer
+func AddRoundConstant(api frontend.API, state [3]frontend.Variable, pos int) [3]frontend.Variable {
+	var roundKeys [192]*big.Int = [192]*big.Int(RoundConstants())
+	var out [3]frontend.Variable
+	for i := 0; i < 3; i++ {
+		out[i] = api.Add(state[i], roundKeys[pos+i])
+	}
+
+	return out
 }
